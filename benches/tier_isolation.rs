@@ -1,26 +1,8 @@
-//! SIMD-tier isolation: NEON assembly vs the pure-Rust fallback.
-//!
-//! zenrav1e's ARM SIMD is hand-written NEON **assembly** under `src/arm/`,
-//! selected by `cfg(asm_neon)` which build.rs emits when the `asm` cargo
-//! feature is on. There is no runtime token to toggle, so the comparison is a
-//! COMPILE-TIME A/B: run this bench twice, once with `--features asm` and once
-//! without, and compare.
-//!
-//! ```text
-//! cargo bench --bench tier_isolation --features asm   # NEON asm
-//! cargo bench --bench tier_isolation                  # pure Rust
-//! ```
-//!
-//! This bench exists because `benches/bench.rs` does not compile against the
-//! current API (it is behind `required-features = ["bench"]`, so no CI job
-//! builds it, and it has drifted: `ts.qc.update` takes 7 args where it passes
-//! 6, and a 25-arg function is called with 22). Until that is repaired there is
-//! no working measurement of what the NEON assembly is worth on ARM.
-//!
-//! Encoding is deliberately single-threaded and still-picture so the number
-//! reflects codec work rather than thread scheduling.
+//! Whole still-image encoding with compile-time assembly and Rust variants.
+//! Run separately with default features and with --features asm. The build
+//! label records the compiled path; these are independent-run comparisons.
 
-use criterion::{Criterion, criterion_group, criterion_main};
+use zenbench::prelude::*;
 use zenrav1e::prelude::*;
 
 /// Noise + patches. A gradient would produce degenerate residuals and
@@ -52,7 +34,7 @@ fn synth(w: usize, h: usize) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
 
 fn encode_once(
   w: usize, h: usize, planes: &(Vec<u8>, Vec<u8>, Vec<u8>), speed: u8,
-) -> usize {
+) -> Packet<u8> {
   let enc = EncoderConfig {
     width: w,
     height: h,
@@ -72,14 +54,58 @@ fn encode_once(
   f.planes[2].copy_from_raw_u8(&planes.2, w / 2, 1);
   ctx.send_frame(f).unwrap();
   ctx.flush();
-  let mut n = 0;
-  while let Ok(pkt) = ctx.receive_packet() {
-    n += pkt.data.len();
+  let mut packet = None;
+  loop {
+    match ctx.receive_packet() {
+      Ok(pkt) => {
+        assert!(packet.is_none(), "still encoder emitted multiple packets");
+        packet = Some(pkt);
+      }
+      Err(EncoderStatus::Encoded) => {}
+      Err(EncoderStatus::LimitReached) => break,
+      Err(e) => panic!("still encode failed after flush: {e}"),
+    }
   }
-  n
+  packet.expect("still encoder emitted no packet")
 }
 
-fn bench_encode(c: &mut Criterion) {
+fn verify_recon(packet: &Packet<u8>, w: usize, h: usize) {
+  let mut decoder = rav1d_safe::Decoder::new().expect("decoder creation");
+  let mut frames = Vec::new();
+  if let Some(frame) =
+    decoder.decode(&packet.data).expect("decode encoded OBU")
+  {
+    frames.push(frame);
+  }
+  frames.extend(decoder.flush().expect("flush decoder"));
+  assert_eq!(frames.len(), 1);
+  let frame = &frames[0];
+  assert_eq!((frame.width() as usize, frame.height() as usize), (w, h));
+  let rav1d_safe::Planes::Depth8(planes) = frame.planes() else {
+    panic!("expected 8-bit output");
+  };
+  let rec = packet.rec.as_ref().expect("encoder reconstruction");
+  for (i, plane) in
+    [Some(planes.y()), planes.u(), planes.v()].into_iter().enumerate()
+  {
+    let pw = if i == 0 { w } else { w / 2 };
+    let ph = if i == 0 { h } else { h / 2 };
+    let plane = plane.expect("4:2:0 plane");
+    let expected = &rec.planes[i];
+    let data = expected.data_origin();
+    let rows: Vec<_> = plane.rows().collect();
+    assert_eq!(rows.len(), ph);
+    for (y, row) in rows.into_iter().enumerate() {
+      assert_eq!(
+        row,
+        &data[y * expected.cfg.stride..][..pw],
+        "recon plane {i}, row {y}"
+      );
+    }
+  }
+}
+
+fn bench_encode(suite: &mut Suite) {
   // Label the arm by what was actually compiled in, so the two runs are not
   // confusable after the fact.
   let arm = if cfg!(asm_neon) {
@@ -95,14 +121,23 @@ fn bench_encode(c: &mut Criterion) {
     &[("256x256", 256usize, 256usize), ("512x512", 512, 512)]
   {
     let planes = synth(w, h);
-    let mut group = c.benchmark_group(format!("encode_still/{label}"));
-    group.sample_size(10);
-    group.bench_function(arm, |b| {
-      b.iter(|| encode_once(w, h, std::hint::black_box(&planes), 8))
+    let packet = encode_once(w, h, &planes, 8);
+    verify_recon(&packet, w, h);
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+      .join("../../codec-artifacts/zenrav1e-arm-audit");
+    std::fs::create_dir_all(&root).unwrap();
+    std::fs::write(root.join(format!("{label}-{arm}.obu")), &packet.data)
+      .unwrap();
+    eprintln!(
+      "fixture {label}/{arm}: {} bytes, exact decoder/reconstruction parity passed",
+      packet.data.len()
+    );
+    suite.group(format!("encode_still/{label}"), |g| {
+      g.bench(arm, move |b| {
+        b.iter(|| encode_once(w, h, black_box(&planes), 8))
+      });
     });
-    group.finish();
   }
 }
 
-criterion_group!(benches, bench_encode);
-criterion_main!(benches);
+zenbench::main!(bench_encode);

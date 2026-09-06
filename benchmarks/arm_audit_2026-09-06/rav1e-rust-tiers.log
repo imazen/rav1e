@@ -1,0 +1,195 @@
+ Downloading crates ...
+  Downloaded crossbeam-utils v0.8.23
+  Downloaded cc v1.4.5
+  Downloaded find-msvc-tools v0.1.12
+  Downloaded crossbeam-deque v0.8.8
+  Downloaded crossbeam-epoch v0.9.21
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling libc v0.2.189
+   Compiling memchr v2.8.3
+   Compiling cfg-if v1.0.4
+   Compiling zerocopy v0.8.56
+   Compiling crossbeam-utils v0.8.23
+   Compiling bitflags v2.13.1
+   Compiling syn v2.0.119
+   Compiling syn v3.0.5
+   Compiling aho-corasick v1.1.5
+   Compiling zerocopy-derive v0.8.56
+   Compiling regex-syntax v0.8.11
+   Compiling find-msvc-tools v0.1.12
+   Compiling serde_core v1.0.229
+   Compiling shlex v2.0.1
+   Compiling crossbeam-epoch v0.9.21
+   Compiling cc v1.4.5
+   Compiling regex-automata v0.4.18
+   Compiling crossbeam-deque v0.8.8
+   Compiling heck v0.5.0
+   Compiling either v1.18.0
+   Compiling anstyle v1.0.14
+   Compiling autocfg v1.5.1
+   Compiling num-traits v0.2.19
+   Compiling equator-macro v0.4.2
+   Compiling rayon-core v1.13.0
+   Compiling serde v1.0.229
+   Compiling zmij v1.0.23
+   Compiling utf8parse v0.2.2
+   Compiling equator v0.4.2
+   Compiling anstyle-parse v1.0.0
+   Compiling serde_derive v1.0.229
+   Compiling serde_json v1.0.151
+   Compiling anstyle-query v1.1.5
+   Compiling rustix v1.1.4
+   Compiling getrandom v0.3.4
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling log v0.4.34
+   Compiling colorchoice v1.0.5
+   Compiling regex v1.13.1
+   Compiling anstream v1.0.0
+   Compiling jobserver v0.1.35
+   Compiling aligned-vec v0.6.4
+   Compiling errno v0.3.14
+   Compiling getrandom v0.4.3
+   Compiling clap_lex v1.1.0
+   Compiling anyhow v1.0.104
+   Compiling parking_lot_core v0.9.12
+   Compiling strsim v0.11.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling itoa v1.0.18
+   Compiling as-slice v0.2.1
+   Compiling nasm-rs v0.3.2
+   Compiling clap_builder v4.6.6
+   Compiling rayon v1.12.0
+   Compiling clap_derive v4.6.4
+   Compiling half v2.7.1
+   Compiling alloca v0.4.0
+   Compiling objc2-core-foundation v0.3.2
+   Compiling plotters-backend v0.3.7
+   Compiling predicates-core v1.0.10
+   Compiling rand_core v0.10.1
+   Compiling paste v1.0.15
+   Compiling scopeguard v1.2.0
+   Compiling ciborium-io v0.2.2
+   Compiling built v0.8.1
+   Compiling thiserror v2.0.20
+   Compiling smallvec v1.16.0
+   Compiling clap v4.6.6
+   Compiling objc2-io-kit v0.3.2
+   Compiling zenrav1e v0.2.0 (/Users/lilith/work/zen/zenrav1e)
+   Compiling ciborium-ll v0.2.2
+   Compiling lock_api v0.4.14
+   Compiling plotters-svg v0.3.7
+   Compiling rand_core v0.9.5
+   Compiling rav1d-safe v0.6.0 (https://github.com/imazen/rav1d-safe?rev=66f58fa6a64c689998721cc5cdb16a4698e26eec#66f58fa6)
+   Compiling aligned v0.4.3
+   Compiling env_filter v2.0.0
+   Compiling itertools v0.13.0
+   Compiling strum_macros v0.28.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling thiserror-impl v2.0.20
+   Compiling archmage-macros v0.9.28
+   Compiling profiling-procmacros v1.0.18
+   Compiling atomig-macro v0.4.0
+   Compiling no_std_io2 v0.9.4
+   Compiling whereat v0.1.5
+   Compiling safe_unaligned_simd v0.2.5
+   Compiling assert_cmd v2.2.2
+   Compiling termtree v0.5.1
+   Compiling difflib v0.4.0
+   Compiling arrayvec v0.7.8
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling predicates v3.1.4
+   Compiling av1-grain v0.2.5
+   Compiling walkdir v2.5.0
+   Compiling criterion-plot v0.8.2
+   Compiling predicates-tree v1.0.13
+   Compiling archmage v0.9.28
+   Compiling atomig v0.4.3
+   Compiling bitstream-io v4.10.0
+   Compiling profiling v1.0.18
+   Compiling strum v0.28.0
+   Compiling env_logger v0.11.11
+   Compiling rand_chacha v0.9.0
+   Compiling rav1d-disjoint-mut v0.3.1 (https://github.com/imazen/rav1d-safe?rev=66f58fa6a64c689998721cc5cdb16a4698e26eec#66f58fa6)
+   Compiling plotters v0.3.7
+   Compiling parking_lot v0.12.5
+   Compiling rand v0.10.2
+   Compiling sysinfo v0.36.1
+   Compiling ciborium v0.2.2
+   Compiling maybe-rayon v0.1.1
+   Compiling fs4 v1.1.0
+   Compiling terminal_size v0.4.4
+   Compiling tinytemplate v1.2.1
+   Compiling v_frame v0.3.9
+   Compiling bstr v1.13.1
+   Compiling itertools v0.14.0
+   Compiling num-derive v0.4.2
+   Compiling arg_enum_proc_macro v0.3.4
+   Compiling raw-cpuid v11.6.0
+   Compiling wait-timeout v0.2.1
+   Compiling page_size v0.6.0
+   Compiling simd_helpers v0.1.0
+   Compiling pastey v0.1.1
+   Compiling yansi v1.0.1
+   Compiling anes v0.1.6
+   Compiling oorandom v11.1.5
+   Compiling noop_proc_macro v0.3.0
+   Compiling enough v0.4.4
+   Compiling to_method v1.1.0
+   Compiling diff v0.1.13
+   Compiling assert_matches v1.5.0
+   Compiling pretty_assertions v1.4.1
+   Compiling criterion v0.8.2
+   Compiling zenbench v0.1.9
+   Compiling quickcheck v1.1.0
+   Compiling rand v0.9.5
+   Compiling interpolate_name v0.2.4
+   Compiling nom v8.0.0
+   Compiling semver v1.0.28
+    Finished `bench` profile [optimized + debuginfo] target(s) in 23.05s
+     Running benches/tier_isolation.rs (target/release/deps/tier_isolation-d3401b031d705a58)
+[tier_isolation] built with: rust_fallback
+fixture 256x256/rust_fallback: 57141 bytes, exact decoder/reconstruction parity passed
+fixture 512x512/rust_fallback: 227994 bytes, exact decoder/reconstruction parity passed
+[zenbench] calibration: int=0.27ns/iter mem_bw=117.8GiB/s mem_lat=7.4ns
+[zenbench] timer resolution: 41ns, loop overhead: 0.22ns/iter, TSC: 1.000 ticks/ns (invariant)
+[zenbench] results → /Users/lilith/tmp/zenbench/zenbench-1788694347-147d.txt
+
+═══════════════════════════════════════════════════════════════
+  zenbench  1788694347-147d
+  git: 5011a1738ebf7655dce724bf6b7aeea766e2735e
+═══════════════════════════════════════════════════════════════
+
+  encode_still/256x256  30 rounds × 1 calls
+                     mean ±mad ms  95% CI vs base   
+  ╰─ rust_fallback   155.6 ±0.7ms  [155.3–155.8]ms  
+
+  encode_still/512x512  17 rounds × 1 calls
+                     mean ±mad ms  95% CI vs base   
+  ╰─ rust_fallback   601.7 ±3.5ms  [600.2–603.5]ms  
+
+  total: 21.3s  (7 noisy rounds)
+═══════════════════════════════════════════════════════════════
+  filter: cargo bench -- --group=NAME  format: --format=llm|csv|md|json
+group=encode_still/256x256 benchmark=rust_fallback  |  vs_base=baseline  |  min=153.82ms mean=155.56ms median=155.70ms mad=674.21µs  |  n=30 cv=0.5% rounds=30 calls=1 mean_ci=[155.31ms 155.82ms] cold=153.12ms
+group=encode_still/512x512 benchmark=rust_fallback  |  vs_base=baseline  |  min=598.38ms mean=601.71ms median=601.65ms mad=3.45ms  |  n=17 cv=0.6% rounds=17 calls=1 mean_ci=[600.25ms 603.47ms] cold=599.63ms
+       45.62 real        85.37 user         5.39 sys
+          1252196352  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+             1361024  page reclaims
+                5936  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                 287  messages sent
+                 600  messages received
+                 283  signals received
+                2329  voluntary context switches
+               71325  involuntary context switches
+          4380332170  instructions retired
+          2055716253  cycles elapsed
+            64520840  peak memory footprint

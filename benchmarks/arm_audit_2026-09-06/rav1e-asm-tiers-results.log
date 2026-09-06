@@ -1,0 +1,43 @@
+[tier_isolation] built with: neon_asm
+fixture 256x256/neon_asm: 57141 bytes, exact decoder/reconstruction parity passed
+fixture 512x512/neon_asm: 227994 bytes, exact decoder/reconstruction parity passed
+[zenbench] calibration: int=0.28ns/iter mem_bw=103.7GiB/s mem_lat=7.4ns
+[zenbench] timer resolution: 41ns, loop overhead: 0.22ns/iter, TSC: 1.000 ticks/ns (invariant)
+[zenbench] results → /Users/lilith/tmp/zenbench/zenbench-1788694395-175d.txt
+
+═══════════════════════════════════════════════════════════════
+  zenbench  1788694395-175d
+  git: 5011a1738ebf7655dce724bf6b7aeea766e2735e
+═══════════════════════════════════════════════════════════════
+
+  encode_still/256x256  30 rounds × 1 calls
+                mean ±mad ms  95% CI vs base   
+  ╰─ neon_asm   116.2 ±0.4ms  [116.1–116.4]ms  
+
+  encode_still/512x512  23 rounds × 1 calls
+                mean ±mad ms  95% CI vs base   
+  ╰─ neon_asm   448.5 ±1.5ms  [447.9–449.1]ms  
+
+  total: 20.9s  (7 noisy rounds)
+═══════════════════════════════════════════════════════════════
+  filter: cargo bench -- --group=NAME  format: --format=llm|csv|md|json
+group=encode_still/256x256 benchmark=neon_asm  |  vs_base=baseline  |  min=115.25ms mean=116.21ms median=116.30ms mad=370.54µs  |  n=30 cv=0.4% rounds=30 calls=1 mean_ci=[116.05ms 116.36ms] cold=112.88ms
+group=encode_still/512x512 benchmark=neon_asm  |  vs_base=baseline  |  min=445.47ms mean=448.50ms median=448.90ms mad=1.52ms  |  n=23 cv=0.3% rounds=23 calls=1 mean_ci=[447.93ms 449.07ms] cold=449.03ms
+       35.21 real        77.21 user         2.73 sys
+          1325318144  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              539689  page reclaims
+                1561  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                  33  messages sent
+                  48  messages received
+                  37  signals received
+                1020  voluntary context switches
+               38764  involuntary context switches
+          1695838907  instructions retired
+           558980075  cycles elapsed
+            60916336  peak memory footprint

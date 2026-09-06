@@ -176,6 +176,7 @@ features = ["parallel"]
 signal-hook = { version = "0.4", optional = true }
 
 [dev-dependencies]
+zenbench = "0.1.9"
 pretty_assertions = "1.4.0"
 interpolate_name = "0.2.4"
 nom = "8.0.0"
