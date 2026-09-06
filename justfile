@@ -109,3 +109,8 @@ asan:
 # Miri (unit tests only — encoder tests too slow)
 miri:
     cargo +nightly miri test --no-default-features --features threading -- "quantize::trellis::tests"
+
+# Separate builds: compiled ARM assembly versus default Rust fallback.
+arm-tiers-macos features="threading":
+    mkdir -p "$HOME/tmp"
+    CARGO_BUILD_JOBS=4 RAYON_NUM_THREADS=4 OMP_NUM_THREADS=4 TMPDIR="$HOME/tmp" nice -n 19 /usr/bin/time -l cargo bench --locked -p zenrav1e --bench tier_isolation --features {{features}} -- --format=llm > "$HOME/tmp/zenrav1e-arm-{{features}}.log" 2>&1

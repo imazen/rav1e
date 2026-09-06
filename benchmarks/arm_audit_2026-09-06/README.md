@@ -14,3 +14,5 @@ These are separate builds/runs, not a paired same-process comparison. Each mean'
 The updated zenbench harness fails on encoder errors, checks exactly one packet, saves raw OBU bytes, and compares the decoded YUV output against the encoder reconstruction before timing. All four reconstruction checks passed. Fixtures use seeded noise plus patches and are not a quality-calibration corpus. Artifact hashes are in [fixtures.pointer.md](fixtures.pointer.md).
 
 Full logs include `/usr/bin/time -l` resource output for build plus benchmark, not isolated codec memory usage. The asm build's full compiler log exceeds the repository size limit and is retained through its pointer; the measurement section is committed separately.
+
+`cargo clippy --locked -p zenrav1e --bench tier_isolation -- -D warnings` passed. The Cargo.lock refresh is committed in `57367894`; it was the lockfile used for both measured builds.
