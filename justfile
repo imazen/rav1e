@@ -52,6 +52,15 @@ ci: lint test feature-check
 gate-identity:
     cargo run --release --example gate_identity
 
+# Source-exact forced 4x4 inter partitions, including partial chroma edges.
+# Requires aomdec; keeps the streams and source planes for inspection.
+gate-sub8-inter:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export SUB8_INTER_ARTIFACTS="${SUB8_INTER_ARTIFACTS:-$HOME/tmp/zenrav1e-sub8-inter}"
+    cargo test --test sub8_inter_roundtrip
+    python3 scripts/verify_sub8_inter.py "$SUB8_INTER_ARTIFACTS" --manifest "$SUB8_INTER_ARTIFACTS/manifest.tsv"
+
 # Re-pin the identity baselines after an INTENTIONAL behavioral change.
 # Commit the TSV diff in the same commit as the change that moved the bytes.
 gate-identity-pin:

@@ -244,47 +244,39 @@ pub(crate) mod rust {
     scale_stride: usize, w: usize, h: usize, _bit_depth: usize,
     _cpu: CpuFeatureLevel,
   ) -> u64 {
-    let src1 = src1.subregion(Area::Rect { x: 0, y: 0, width: w, height: h });
-    // Always chunk and apply scaling on the sse of squares the size of
-    // decimated/sub-sampled importance block sizes.
-    // Warning: Changing this will require changing/disabling assembly.
+    // Include partial chunks at visible frame edges. Window iterators only
+    // yield full chunks and would silently omit the final rows/columns.
     let chunk_size: usize = IMPORTANCE_BLOCK_SIZE >> 1;
-
-    // Iterator of a row of scales, stretched out to be per row
-    let scales = scale.chunks_exact(scale_stride);
-
-    let sse = src1
-      .vert_windows(chunk_size)
-      .step_by(chunk_size)
-      .zip(src2.vert_windows(chunk_size).step_by(chunk_size))
-      .zip(scales)
-      .map(|((row1, row2), scales)| {
-        row1
-          .horz_windows(chunk_size)
-          .step_by(chunk_size)
-          .zip(row2.horz_windows(chunk_size).step_by(chunk_size))
-          .zip(scales)
-          .map(|((chunk1, chunk2), &scale)| {
-            let sum = chunk1
-              .rows_iter()
-              .zip(chunk2.rows_iter())
-              .map(|(chunk_row1, chunk_row2)| {
-                chunk_row1
-                  .iter()
-                  .zip(chunk_row2)
-                  .map(|(&a, &b)| {
-                    let c = i32::cast_from(a) - i32::cast_from(b);
-                    (c * c) as u32
-                  })
-                  .sum::<u32>()
+    let mut sse = 0u64;
+    for y in (0..h).step_by(chunk_size) {
+      for x in (0..w).step_by(chunk_size) {
+        let area = Area::Rect {
+          x: x as isize,
+          y: y as isize,
+          width: (w - x).min(chunk_size),
+          height: (h - y).min(chunk_size),
+        };
+        let chunk1 = src1.subregion(area);
+        let chunk2 = src2.subregion(area);
+        let sum = chunk1
+          .rows_iter()
+          .zip(chunk2.rows_iter())
+          .map(|(a, b)| {
+            a.iter()
+              .zip(b)
+              .map(|(&a, &b)| {
+                let delta = i32::cast_from(a) - i32::cast_from(b);
+                (delta * delta) as u32
               })
-              .sum::<u32>();
-            (sum as u64 * scale as u64 + (1 << GET_WEIGHTED_SSE_SHIFT >> 1))
-              >> GET_WEIGHTED_SSE_SHIFT
+              .sum::<u32>()
           })
-          .sum::<u64>()
-      })
-      .sum::<u64>();
+          .sum::<u32>();
+        let weight = scale[(y / chunk_size) * scale_stride + x / chunk_size];
+        sse += (sum as u64 * weight as u64
+          + (1 << GET_WEIGHTED_SSE_SHIFT >> 1))
+          >> GET_WEIGHTED_SSE_SHIFT;
+      }
+    }
 
     let den = DistortionScale::new(1, 1 << GET_WEIGHTED_SSE_SHIFT).0 as u64;
     (sse + (den >> 1)) / den
@@ -387,6 +379,60 @@ pub mod test {
   use crate::frame::*;
   use crate::tiling::Area;
   use crate::util::Pixel;
+
+  #[test]
+  fn weighted_sse_includes_partial_chunks() {
+    use crate::rdo::DistortionScale;
+    fn check<T: Pixel>(depth: usize) {
+      let mut a = Plane::<T>::new(16, 16, 0, 0, 32, 32);
+      let mut b = Plane::<T>::new(16, 16, 0, 0, 64, 64);
+      a.data.fill(T::cast_from(0));
+      let value = (1 << depth) - 1;
+      b.data.fill(T::cast_from(value));
+      let scales: Vec<_> = (0..16)
+        .map(|i| DistortionScale::new((i % 3 + 1) as u64, 1).0)
+        .collect();
+      let area = Area::StartingAt { x: 0, y: 0 };
+      for w in 1..=16 {
+        for h in 1..=16 {
+          let mut expected = 0u64;
+          for y in 0..h {
+            for x in 0..w {
+              expected +=
+                (value as u64).pow(2) * (((y / 4 * 4 + x / 4) % 3 + 1) as u64);
+            }
+          }
+          for actual in [
+            rust::get_weighted_sse(
+              &a.region(area),
+              &b.region(area),
+              &scales,
+              4,
+              w,
+              h,
+              depth,
+              CpuFeatureLevel::default(),
+            ),
+            get_weighted_sse(
+              &a.region(area),
+              &b.region(area),
+              &scales,
+              4,
+              w,
+              h,
+              depth,
+              CpuFeatureLevel::default(),
+            ),
+          ] {
+            assert_eq!(actual, expected, "{depth}-bit {w}x{h}");
+          }
+        }
+      }
+    }
+    check::<u8>(8);
+    check::<u16>(10);
+    check::<u16>(12);
+  }
 
   // Generate plane data for get_sad_same()
   fn setup_planes<T: Pixel>() -> (Plane<T>, Plane<T>) {

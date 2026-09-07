@@ -122,6 +122,19 @@ Evidence for both claims and the rest of the `66f58fa6` bump:
 
 ## Known Bugs (Fixed)
 
+### Sub-8 inter partitions and partial chroma distortion (2026-09-07)
+
+Forced 4x4 mono/444 inter partitions hit contradictory must-split/can-split
+guards. Only 422 still needs the shared-chroma restriction. Separately,
+420's outside-visible luma owner could lose visible shared chroma from
+RDO, and scalar weighted SSE dropped partial 4x4 chunks. Together those
+errors let lossless inter coding retain previous-frame edge samples.
+`tests/sub8_inter_roundtrip.rs` checks source == encoder reconstruction ==
+rav1d-safe over 144 configurations / 288 frames; libaom independently
+matches all sources. Each old implementation fails a regression when
+restored alone. See `benchmarks/sub8_inter_2026-09-07.md` for gates and
+the intentional odd-dimension fingerprint changes.
+
 ### Lossless WHT coefficients modified by trellis (2026-09-07)
 
 `quantize::trellis::optimize` must return WHT_WHT coefficients unchanged:

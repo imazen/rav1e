@@ -288,18 +288,33 @@ fn compute_distortion<T: Pixel>(
     frame_bo.0.y << MI_SIZE_LOG2,
   );
 
-  if visible_w == 0 || visible_h == 0 {
-    return ScaledDistortion::zero();
-  }
-
-  let mut distortion = match fi.config.tune {
-    Tune::Psychovisual | Tune::StillImage | Tune::Ssimulacra2 => {
-      cdef_dist_wxh(
+  // An invisible 4x4 luma owner can still own visible shared chroma.
+  let mut distortion = if visible_w == 0 || visible_h == 0 {
+    ScaledDistortion::zero()
+  } else {
+    (match fi.config.tune {
+      Tune::Psychovisual | Tune::StillImage | Tune::Ssimulacra2 => {
+        cdef_dist_wxh(
+          &input_region,
+          &rec_region,
+          visible_w,
+          visible_h,
+          fi.sequence.bit_depth,
+          |bias_area, bsize| {
+            distortion_scale(
+              fi,
+              input_region.subregion(bias_area).frame_block_offset(),
+              bsize,
+            )
+          },
+          fi.cpu_feature_level,
+        )
+      }
+      Tune::Psnr => sse_wxh(
         &input_region,
         &rec_region,
         visible_w,
         visible_h,
-        fi.sequence.bit_depth,
         |bias_area, bsize| {
           distortion_scale(
             fi,
@@ -307,25 +322,11 @@ fn compute_distortion<T: Pixel>(
             bsize,
           )
         },
+        fi.sequence.bit_depth,
         fi.cpu_feature_level,
-      )
-    }
-    Tune::Psnr => sse_wxh(
-      &input_region,
-      &rec_region,
-      visible_w,
-      visible_h,
-      |bias_area, bsize| {
-        distortion_scale(
-          fi,
-          input_region.subregion(bias_area).frame_block_offset(),
-          bsize,
-        )
-      },
-      fi.sequence.bit_depth,
-      fi.cpu_feature_level,
-    ),
-  } * fi.dist_scale[0];
+      ),
+    }) * fi.dist_scale[0]
+  };
 
   // QM ratio composition (`fi.qm_dist_ratio`, Tune::Ssimulacra2): scale the
   // luma pixel distortion by the trial's QM-weighted / unweighted
@@ -361,16 +362,18 @@ fn compute_distortion<T: Pixel>(
     && fi.sequence.chroma_sampling != ChromaSampling::Cs400
   {
     let PlaneConfig { xdec, ydec, .. } = ts.input.planes[1].cfg;
-    let chroma_w = if bsize.width() >= 8 || xdec == 0 {
-      (visible_w + xdec) >> xdec
-    } else {
-      (4 + visible_w + xdec) >> xdec
-    };
-    let chroma_h = if bsize.height() >= 8 || ydec == 0 {
-      (visible_h + ydec) >> ydec
-    } else {
-      (4 + visible_h + ydec) >> ydec
-    };
+    let frame_bo = ts.to_frame_block_offset(tile_bo);
+    let origin = frame_bo.plane_offset(&ts.input.planes[1].cfg);
+    let (chroma_w, chroma_h) = clip_visible_bsize(
+      (fi.width + xdec) >> xdec,
+      (fi.height + ydec) >> ydec,
+      bsize.subsampled_size(xdec, ydec).unwrap(),
+      origin.x as usize,
+      origin.y as usize,
+    );
+    if chroma_w == 0 || chroma_h == 0 {
+      return distortion;
+    }
 
     for p in 1..3 {
       let input_region = ts.input_tile.planes[p].subregion(area);
@@ -419,11 +422,9 @@ fn compute_tx_distortion<T: Pixel>(
     )
   };
 
-  if visible_w == 0 || visible_h == 0 {
-    return ScaledDistortion::zero();
-  }
-
-  let mut distortion = if skip {
+  let mut distortion = if skip && (visible_w == 0 || visible_h == 0) {
+    ScaledDistortion::zero()
+  } else if skip {
     sse_wxh(
       &input_region,
       &rec_region,
@@ -449,16 +450,18 @@ fn compute_tx_distortion<T: Pixel>(
     && fi.sequence.chroma_sampling != ChromaSampling::Cs400
   {
     let PlaneConfig { xdec, ydec, .. } = ts.input.planes[1].cfg;
-    let chroma_w = if bsize.width() >= 8 || xdec == 0 {
-      (visible_w + xdec) >> xdec
-    } else {
-      (4 + visible_w + xdec) >> xdec
-    };
-    let chroma_h = if bsize.height() >= 8 || ydec == 0 {
-      (visible_h + ydec) >> ydec
-    } else {
-      (4 + visible_h + ydec) >> ydec
-    };
+    let frame_bo = ts.to_frame_block_offset(tile_bo);
+    let origin = frame_bo.plane_offset(&ts.input.planes[1].cfg);
+    let (chroma_w, chroma_h) = clip_visible_bsize(
+      (fi.width + xdec) >> xdec,
+      (fi.height + ydec) >> ydec,
+      bsize.subsampled_size(xdec, ydec).unwrap(),
+      origin.x as usize,
+      origin.y as usize,
+    );
+    if chroma_w == 0 || chroma_h == 0 {
+      return distortion;
+    }
 
     for p in 1..3 {
       let input_region = ts.input_tile.planes[p].subregion(area);

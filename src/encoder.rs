@@ -4485,9 +4485,9 @@ fn encode_partition_bottomup<T: Pixel, W: Writer>(
   let must_split =
     is_square && (bsize > fi.partition_range.max || !has_cols || !has_rows);
 
-  let can_split = // FIXME: sub-8x8 inter blocks not supported for non-4:2:0 sampling
+  let can_split = // 422 still lacks the sub-8x8 shared-chroma prediction path.
     if fi.frame_type.has_inter() &&
-      fi.sequence.chroma_sampling != ChromaSampling::Cs420 &&
+      fi.sequence.chroma_sampling == ChromaSampling::Cs422 &&
       bsize <= BlockSize::BLOCK_8X8 {
       false
     } else {
@@ -4813,10 +4813,10 @@ fn encode_partition_topdown<T: Pixel, W: Writer>(
     && is_square
     && (bsize > fi.partition_range.max || !has_cols || !has_rows);
 
-  let can_split = // FIXME: sub-8x8 inter blocks not supported for non-4:2:0 sampling
+  let can_split = // 422 still lacks the sub-8x8 shared-chroma prediction path.
     if is_forced_leaf_child
       || (fi.frame_type.has_inter()
-        && fi.sequence.chroma_sampling != ChromaSampling::Cs420
+        && fi.sequence.chroma_sampling == ChromaSampling::Cs422
         && bsize <= BlockSize::BLOCK_8X8)
     {
       false
