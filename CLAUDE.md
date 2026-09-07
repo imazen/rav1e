@@ -122,6 +122,17 @@ Evidence for both claims and the rest of the `66f58fa6` bump:
 
 ## Known Bugs (Fixed)
 
+### Lossless WHT coefficients modified by trellis (2026-09-07)
+
+`quantize::trellis::optimize` must return WHT_WHT coefficients unchanged:
+coefficient RDO can alter samples even when the quantizer is zero. The
+source-exact regression `tests/lossless_trellis_roundtrip.rs` fails before
+the guard and passes 72 configurations / 108 frames after it, spanning
+stills and sequences, 8/10/12-bit and mono/420/444. VAQ was not the cause:
+its segmentation is already disabled at quantizer zero. See
+`benchmarks/lossless_trellis_2026-09-07.md` for validation and scope.
+
+
 ### Inter 4:1 sliver joint-chroma prediction divergence (fixed: see master)
 `BLOCK_4X16` / `BLOCK_16X4` inter blocks reconstructed their chroma from a
 single motion vector, so the encoder's recon diverged from rav1d-safe,

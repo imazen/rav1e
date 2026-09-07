@@ -82,10 +82,13 @@ pub fn optimize<T: Coefficient>(
   tx_type: TxType, lambda: f64, qm: Option<&[u8]>, qm_weight_dist: bool,
   eob: u16, fc: &CDFContext, plane_type: usize, posture: Option<StackPosture>,
 ) -> u16 {
-  // WHT_WHT (lossless pseudo-type) shares DCT_DCT's 4x4 scan/class.
-  let scan_tx_type =
-    if tx_type == TxType::WHT_WHT { TxType::DCT_DCT } else { tx_type };
-  let scan = &av1_scan_orders[tx_size as usize][scan_tx_type as usize].scan;
+  // WHT_WHT coefficients represent exact lossless residuals. A rate/distortion
+  // descent can remove levels even at quantizer zero, so neither the opt-in
+  // trellis nor an explicitly supplied stack posture may optimize them.
+  if tx_type == TxType::WHT_WHT {
+    return eob;
+  }
+  let scan = &av1_scan_orders[tx_size as usize][tx_type as usize].scan;
   let n = eob as usize;
 
   if n <= 1 {
@@ -133,7 +136,7 @@ pub fn optimize<T: Coefficient>(
     }
   };
 
-  let tx_class = tx_type_to_class[scan_tx_type as usize];
+  let tx_class = tx_type_to_class[tx_type as usize];
   let txs_ctx = ContextWriter::get_txsize_entropy_ctx(tx_size);
   let bhl = ContextWriter::get_txb_bhl(tx_size);
   let coded_size = av1_get_coded_tx_size(tx_size);

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+- Preserve exact lossless WHT coefficients when trellis is requested, covering both still and sequence encoding. Source-exact decoder regression spans 8/10/12-bit and monochrome/420/444.
+
+
 ### Changed
 - **Third-party lockfile refreshed within the existing requirements** (`e881365`).
   `Cargo.lock` only — no manifest requirement moved, so every version stays
